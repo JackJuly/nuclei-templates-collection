@@ -1,0 +1,7 @@
+id: others
+info:
+  name: others
+  author: Xc1Ym
+
+workflows:
+  - tags: others

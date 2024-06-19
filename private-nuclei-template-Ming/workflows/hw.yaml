@@ -1,0 +1,7 @@
+id: hw
+info:
+  name: hw
+  author: Xc1Ym
+
+workflows:
+  - tags: hw
